@@ -41,3 +41,22 @@
     </xs:complexType>
   </xs:element>
 </xs:schema>
+
+
+
+
+
+
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://www.opentravel.org/OTA/2003/05" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="FetchReservationRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="ReservationID" type="xs:string" />
+        <xs:element name="ResortId" type="xs:string" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
