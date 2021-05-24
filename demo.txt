@@ -1,1 +1,13 @@
-
+<?xml version="1.0" encoding="utf-8"?> 
+  <ReservationLookupRequest xmlns="http://htng.org/PWS/2008B/SingleGuestItinerary/Reservation/Types"> 
+	<ReservationLookupData>
+      <ReservationLookup reservationStatus="CHECKED_IN">
+         <DateRange> 
+            <Start>2019-01-25T00:00:00</Start>                         
+            <End>2019-01-25T23:59:59</End>
+         </DateRange> 
+         <ResortId>SG74</ResortId>
+         <RoomNumber>1601 AOS</RoomNumber>
+      </ReservationLookup>
+    </ReservationLookupData> 
+  </ReservationLookupRequest>
