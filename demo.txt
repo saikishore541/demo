@@ -1,31 +1,5 @@
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://htng.org/PWS/2008B/SingleGuestItinerary/Reservation/Types" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:element name="ReservationLookupRequest">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element name="ReservationLookupData">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="ReservationLookup">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="DateRange">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element type="xs:dateTime" name="Start"/>
-                          <xs:element type="xs:dateTime" name="End"/>
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                    <xs:element type="xs:string" name="ResortId"/>
-                    <xs:element type="xs:string" name="RoomNumber"/>
-                  </xs:sequence>
-                  <xs:attribute type="xs:string" name="reservationStatus"/>
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
-</xs:schema>
+<?xml version="1.0" encoding="utf-8"?> 
+	<FetchReservationRequest xmlns="http://www.opentravel.org/OTA/2003/05"> 
+    	<ReservationID>22471</ReservationID>
+    	<ResortId>SG74</ResortId>
+    </FetchReservationRequest> 
