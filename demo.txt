@@ -1,8 +1,999 @@
-<?xml version="1.0" encoding="utf-8"?> 
-	<FetchReservationRequest xmlns="http://www.opentravel.org/OTA/2003/05"> 
-    	<ReservationID>22471</ReservationID>
-    	<ResortId>SG74</ResortId>
-    </FetchReservationRequest> 
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="ErrorTypeApikit" doc:id="908ce758-6ed6-405d-ad4e-c4b356227d86">
+		<choice doc:name="APIKIT Faults" doc:id="a42d5ae7-54cf-4fd6-9fe2-061fedeff455" >
+			<when expression='#[error.errorType.identifier == "BAD_REQUEST"]' >
+				<ee:transform doc:name="Bad Request" doc:id="7acf3cd8-8eee-47c7-b30e-fe7cc232b4bc">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A Bad Request Error has occurred',
+	httpStatus: '400'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[error.errorType.identifier == "METHOD_NOT_ALLOWED"]' >
+				<ee:transform doc:name="Method not allowed" doc:id="a02d880e-a0a3-4a63-a449-eae96c0553a6">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Method is not allowed for the API',
+	httpStatus: '405'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[error.errorType.identifier == "NOT_ACCEPTABLE"]' >
+				<ee:transform doc:name="Not Acceptable" doc:id="d5884274-1b49-4d09-a46e-ccf0de628766">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Method is not accepted for the API',
+	httpStatus: '406'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[error.errorType.identifier == "NOT_FOUND"]' >
+				<ee:transform doc:name="Not found" doc:id="751c721c-dc60-4419-9929-82224e0d3032">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Method not found for the API',
+	httpStatus: '404'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[error.errorType.identifier == "UNSUPPORTED_MEDIA_TYPE"]' >
+				<ee:transform doc:name="Media Type not supported" doc:id="8228d727-5e6c-47a1-94ec-c78fe55a5679" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Media Type not supported for the API',
+	httpStatus: '415'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Default Apikit error" doc:id="2f019d1c-3c9e-49ed-a450-066a73643a2f" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Default APIKIT Error',
+	httpStatus: '400'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
+
+------------------------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="ErrorTypeDB" doc:id="0e6e1b1b-d02b-407c-a716-b8815bf31e89">
+		<choice doc:name="Database Errors" doc:id="0ebddd3b-92d0-49e1-ba1d-be25534cc26f" >
+			<when expression='#[error.errorType.identifier == "BAD_SQL_SYNTAX"]'>
+				<ee:transform doc:name="Invalid Syntax" doc:id="d7f42c27-50d3-430e-a9fb-21fd2648c44a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Wrong SQL Syntax',
+	httpStatus : '500'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			
+</when>
+			<when expression='#[error.errorType.identifier == "INVALID_CREDENTIALS"]'>
+				<ee:transform doc:name="Invalid Credentials" doc:id="caf5cdcd-f245-4896-8895-e6fd79bce90e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Invalid Credentials',
+	httpStatus : '401'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>	
+			
+</when>
+			<when expression='#[error.errorType.identifier == "QUERY_EXECUTION"]'>
+				<ee:transform doc:name="Invalid Grants" doc:id="b416f67d-e94c-4c1b-aeb1-a56cfe66d2e4" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Invalid grants to perform database action',
+	httpStatus : '401'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			
+</when>
+			<otherwise >
+				<ee:transform doc:name="Default DB Error" doc:id="00210734-3503-4d74-b218-96eb004920ae" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Generic Database Error',
+	httpStatus : '500'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			
+</otherwise>
+			</choice>
+	</flow>
+</mule>
+
+------------------------------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub" 
+	xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd">
+	
+	
+		<cloudhub:config name="CloudHub_Config" doc:name="CloudHub Config" doc:id="a1452c48-d1a3-4ed5-bf57-cfc9b6d196a1" >
+		<cloudhub:connection username="#[Mule::p('anypoint.cloudhub.username')]" password="${anypoint.cloudhub.password}" environment="${environment.id}"/>
+	</cloudhub:config>
+	<global-property doc:name="Global Property" doc:id="4bc6ccb2-4734-44e7-a1b0-27744f9af126" name="environment.id" value="dummy" />
+	<global-property doc:name="Global Property" doc:id="b591fd8b-9afd-4796-aee3-476a67d445d9" name="anypoint.cloudhub.password" value="dummy" />
+	<global-property doc:name="Global Property" doc:id="97e4ffea-b621-4366-befe-dc9daab16767" name="domain" value="dummy" />
+	<sub-flow name="sendCloudhubAlert" doc:id="00ce9e61-9a97-48f1-923d-13621ea1cd39" >
+		<choice doc:name="Choice" doc:id="04e98c43-9c84-4501-944a-8dfcabd9722b" >
+			<when expression="#[Mule::p('application.aws.region') != null]" >
+				<async doc:name="Async" doc:id="35c86b00-f138-469c-9af9-e0367ba57c79" >
+			<try doc:name="Try" doc:id="d0962608-fc22-486e-8537-f07ad5b3b687">
+					<cloudhub:create-notification doc:name="Create Notification" doc:id="00da4bbf-d970-4e4e-8a02-f9c73390a0b8" config-ref="CloudHub_Config" priority="ERROR" domain="${domain}">
+					<cloudhub:message><![CDATA[#[write(payload, "application/json")]]]></cloudhub:message>
+					</cloudhub:create-notification>
+					<error-handler>
+						<on-error-continue enableNotifications="false" logException="false" doc:name="On Error Continue" doc:id="27d82056-f9d1-4a9d-9df8-2e4d27bc4c73">
+						<ee:transform doc:name="Transform Message" doc:id="c29b6a50-5d35-486c-b22b-c1565cf81c05">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+var apiException = {
+	"errorCode": error.errorType,
+	"description": error.description,
+	"detailedDescription": error.detailedDescription,
+}
+
+// Append downstream system exceptions & error data to the ones generated in the current layer
+var systemExceptions = (vars.errorInfo.systemExceptions default []) ++ (vars.systemExceptions default [])
+var customErrorData = (vars.errorInfo.data default []) ++ (vars.errorData default [])
+---
+{
+	"env": Mule::p('anypoint.environment'),
+	"correlationId" : correlationId,
+	"timeStamp": now(),
+	"applicationName": "CloudHub Notification", //app.name,
+	"apiException": apiException,
+	"systemExceptions": systemExceptions,
+	"data": customErrorData
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+						<logger level="INFO" doc:name="Logger" doc:id="f274be43-c308-43da-a35b-3bae7f564edf" message="#[payload]" />
+						</on-error-continue>
+					</error-handler>
+				</try>
+		</async>
+			</when>
+		</choice>
+	</sub-flow>
+	
+	<flow name="ErrorTypeDefault" doc:id="ea7d2f88-6457-4d5c-b54f-42ea938e7286" >
+		<ee:transform doc:name="Unhandled Mule Error" doc:id="cb47d498-ae7b-41fc-8262-992793663952" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: error.description,
+	httpStatus : '500'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="ErrorTypeHttp" doc:id="6eabdf4d-d59c-48c5-a8c0-0439d7d5f50d" >
+		<choice doc:name="Choice" doc:id="e19d1ec2-32b3-42ec-bb13-3588355144b2" >
+			<when expression='error.errorType.identifier == "NOT_FOUND"'>
+				<ee:transform doc:name="ErrorTypeNotFound" doc:id="c2bccd74-b6c0-4ee4-93a2-377449512773">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Not found',
+	httpStatus : '404'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='error.errorType.identifier == "EXPRESSION"'>
+				<ee:transform doc:name="Transform Message" doc:id="06b5a4f5-4f35-4ace-a83a-192c1666dd10">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A Mule Expression Error has occurred',
+	httpStatus : '500'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='error.errorType.identifier == "ROUTING"'>
+				<ee:transform doc:name="Transform Message" doc:id="289ce2fd-ac55-41ad-a2db-acf222853325">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A Routing error has occurred',
+	httpStatus : '400'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='error.errorType.identifier == "UNAUTHORIZED"'>
+				<ee:transform doc:name="Transform Message" doc:id="019b0f94-f7c8-498b-b6b4-536e3f9a830e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Unauthorized request',
+	httpStatus : '401'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='error.errorType.identifier == "CANNOT_DISPATCH"'>
+				<ee:transform doc:name="Transform Message" doc:id="98728b02-3d11-4638-9cbc-718e07a46857">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A Mule Dispatching Error has occurred',
+	httpStatus : '500'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='error.errorType.identifier == "CONNECTIVITY"'>
+				<ee:transform doc:name="Transform Message" doc:id="fd38bbfb-d5f5-4741-ad35-9c7cd05a63bf">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A Connection Error has occurred',
+	httpStatus : '504'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='error.errorType.identifier == "FORBIDDEN"'>
+				<ee:transform doc:name="Transform Message" doc:id="ddd71ccc-9f50-417d-a436-757aa8756761">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Not authorized',
+	httpStatus : '403'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='error.errorType.identifier == "METHOD_NOT_ALLOWED"'>
+				<ee:transform doc:name="Transform Message" doc:id="04af70e0-c3ed-4108-b6bf-af1f8ef9bedf">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Method is not allowed',
+	httpStatus : '405'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='error.errorType.identifier == "NOT_ACCEPTABLE"'>
+				<ee:transform doc:name="Transform Message" doc:id="8431d94b-c45d-47e9-ade0-aed82b61c8a7">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'NOT_ACCEPTABLE',
+	httpStatus : '406'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='error.errorType.identifier == "BAD_REQUEST"'>
+				<ee:transform doc:name="Transform Message" doc:id="2fb80598-c549-40f9-ae97-56c6e4d7cde9">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A bad request has occurred',
+	httpStatus : '400'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='error.errorType.identifier == "TIMEOUT"'>
+				<ee:transform doc:name="Transform Message" doc:id="2abf6ba1-2637-48d5-bc22-be77f66d2477">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A timeout error has occurred',
+	httpStatus : '504'
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="8efe758f-c3c7-4d91-9c85-b8b64e7b2cff" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A unhandled Mule Error has occurred',
+	httpStatus : '500'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="errorhandler" doc:id="07085e45-1917-4bba-a673-d543df5af19c" >
+		<ee:transform doc:name="Parse Input Data" doc:id="1bdc57b9-1634-45b3-99b2-0ef3fcec2a34" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+var namespace = {'FILE':'ErrorTypeFile',
+				 'DB':'ErrorTypeDB',
+				 'JMS':'ErrorTypeJMS',
+				 'WSC':'ErrorTypeWSC',
+				 'APIKIT':'ErrorTypeApikit',
+				 'TECHNICAL':'ErrorTypeTechnical',
+				 'BUSINESS':'ErrorTypeFunctional',
+				 'HTTP':'ErrorTypeHttp',
+				 'XREF-CLIENT': 'ErrorTypeXRef'
+				 }
+				 
+				 			 
+
+var flow = if (namespace[error.errorType.namespace] != null) namespace[error.errorType.namespace] else 'ErrorTypeDefault' 
+---
+flow]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="corrId" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.correlationId default attributes.headers.'x-correlation-id' default correlationId]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="e09fe28b-379a-4d14-a211-88324915ab91" name="#[payload]"/>
+		<ee:transform doc:name="Get HTTP Status &amp; Message" doc:id="3d5b08be-596b-46c4-a7c7-777d00a295f7" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="errorMessage" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.errorMessage]]></ee:set-variable>
+				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.httpStatus
+			]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Set error handler message" doc:id="0a69b872-fd1d-407e-a93d-41f418760256" name="errorHandler_subFlow"/>
+		<flow-ref doc:name="Send Cloudhub Alert" doc:id="6c346514-6676-438f-9ade-35dee86343d3" name="sendCloudhubAlert" />
+	
+</flow>
+	<sub-flow name="errorHandler_subFlow" doc:id="468fe454-948e-4fbe-a815-34853e9c8759" >
+		<ee:transform doc:name="Set Message" doc:id="196fec66-a494-42ee-a3eb-f628fd518d83" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "errorCode": vars.httpStatus,
+  "correlationId" : vars.corrId,
+  "timeStamp": now() as DateTime {format: "yyyy-MM-dd'T'HH:mm:ss'Z'"},
+  "description":   vars.errorMessage,
+  "detailedDescription":  if (error.detailedDescription != null) error.detailedDescription else vars.errorMessage,
+  "detailedTargetDescription": error.muleMessage.payload match {
+    case e is Object -> e.detailedTargetDescription default e
+    else -> error.muleMessage.payload
+	}	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	
+</sub-flow>
+
+	<flow name="muleErrorHandler" doc:id="76361596-b215-4437-a787-294364b1f26c" >
+		<ee:transform doc:name="Parse Input Data" doc:id="6f307be3-b701-4260-89f0-24cca7bc9907" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+var namespace = {'FILE':'ErrorTypeFile',
+				 'DB':'ErrorTypeDB',
+				 'JMS':'ErrorTypeJMS',
+				 'WSC':'ErrorTypeWSC',
+				 'APIKIT':'ErrorTypeApikit',
+				 'TECHNICAL':'ErrorTypeTechnical',
+				 'BUSINESS':'ErrorTypeFunctional',
+				 'HTTP':'ErrorTypeHttp',
+				 'XREF-CLIENT': 'ErrorTypeXRef'
+				 }
+				 
+				 			 
+
+var flow = if (namespace[error.errorType.namespace] != null) namespace[error.errorType.namespace] else 'ErrorTypeDefault' 
+---
+flow
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="systemExceptions" ><![CDATA[%dw 2.0
+output application/java
+var existingExceptions = vars.systemExceptions default []
+---
+if(vars.systemException != null)
+	existingExceptions ++ [vars.systemException]
+else
+	existingExceptions]]></ee:set-variable>
+				<ee:set-variable variableName="errorDataEntries" ><![CDATA[%dw 2.0
+output application/java
+var existingData = vars.errorDataEntries default []
+---
+if(vars.errorData != null)
+	existingData ++ vars.errorData
+else
+	existingData]]></ee:set-variable>
+				<ee:set-variable variableName="errorInfo" ><![CDATA[%dw 2.0
+output application/java
+var errorPayload = if(error.muleMessage.payload is String) null else error.muleMessage.payload
+---
+if((not (errorPayload is Binary)) and errorPayload.apiException != null and errorPayload.systemExceptions != null)
+	errorPayload
+else
+	null]]></ee:set-variable>
+				<ee:set-variable variableName="corrId" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.correlationId default attributes.headers.'x-correlation-id' default correlationId]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="67dde430-4180-49c1-8c4f-1bfc4c16b550" name="#[payload]"/>
+		<ee:transform doc:name="Get HTTP Status &amp; Message" doc:id="28831ab7-6d67-482b-bb3f-9c4fdec3ceee" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="errorMessage" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.errorMessage]]></ee:set-variable>
+				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.httpStatus
+			]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Set Output Message" doc:id="7bf62a0e-2143-433d-a667-02d8acf2471a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+// If there is an API Exception available from the downstream layer, use it
+var apiException = vars.errorInfo.apiException default {
+	"errorCode": vars.httpStatus,
+	"description":   vars.errorMessage,
+	"detailedDescription":  if (error.detailedDescription != null) error.detailedDescription else vars.errorMessage,
+}
+
+// Append downstream system exceptions & error data to the ones generated in the current layer
+var systemExceptions = (vars.errorInfo.systemExceptions default []) ++ (vars.systemExceptions default [])
+var customErrorData = (vars.errorInfo.data default []) ++ (vars.errorData default [])
+---
+{
+	"env": Mule::p('anypoint.environment'),
+	"correlationId" : vars.corrId,
+	"timeStamp": now(),
+	"applicationName": app.name,
+	"apiException": apiException,
+	"systemExceptions": systemExceptions,
+	"data": customErrorData
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="Send Cloudhub Alert" doc:id="ace6ffc8-06ce-4cae-be31-317056fa4b2f" name="sendCloudhubAlert" />
+	</flow>
+
+</mule>
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="ErrorTypeFile" doc:id="24491468-8f0e-467f-bac8-1f8352d9b443">
+		<choice doc:name="File Handling Errors" doc:id="ec38e7c4-2274-48f2-ae29-55bebb3e46c9">
+					<when expression='#[error.errorType.identifier == "ILLEGAL_PATH"]'>
+				<ee:transform doc:name="Invalid Path" doc:id="6a7974f3-86d6-451e-8fe6-4574aa5fdd05" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'The specified path doesnt exist in the filesytem',
+	httpStatus: '404'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					
+</when>
+					<when expression='#[error.errorType.identifier == "FILE_ALREADY_EXISTS"]'>
+				<ee:transform doc:name="File already exists" doc:id="d508586f-bb5d-4972-9cee-c56b306876db" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'The specified file already exists in the filesystem',
+	httpStatus: '500'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					
+</when>
+					<when expression='#[error.errorType.identifier == "FILE_DOESNT_EXIST"]'>
+				<ee:transform doc:name="File doesnt already exists" doc:id="17e30097-c34a-4e04-a87b-7a3950acff30" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'The specified file does not exist in the',
+	httpStatus: '404'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					
+</when>
+					<when expression='#[error.errorType.identifier == "FILE_LOCK"]'>
+				<ee:transform doc:name="File is locked" doc:id="c81402ef-f430-4461-b15f-486508cbe60a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'The specified file is locked and may not be accessed',
+	httpStatus: '500'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					
+</when>
+					<otherwise>
+				<ee:transform doc:name="Not categorized file error" doc:id="f53073ad-b8f9-426b-89e1-9dbb8ce3faa3" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Not categorized file error',
+	httpStatus: '500'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					
+</otherwise>
+				</choice>
+	</flow>
+	
+</mule>
+---------------------------------------------------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="ErrorTypeFunctional" doc:id="ba903ffc-0029-41fe-97ee-1b0c3aac400d" >
+		<choice doc:name="Choice" doc:id="d210e3fd-8e1c-45c7-92a8-4aa6128a1256" >
+			<when expression='#[error.errorType.identifier == "INVALID_INPUT_DATA"]'>
+				<ee:transform doc:name="Invalid Input" doc:id="12c9aaaa-cc56-4289-8688-70355a8b3e28">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Input data is invalid',
+	httpStatus : '400'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[error.errorType.identifier == "INVALID_RESPONSE"]'>
+				<ee:transform doc:name="Invalid Input" doc:id="b3914513-6aaa-4995-97e7-8c6dcec6a453">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Response from target system is invalid',
+	httpStatus : '404'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="42ede22a-54ca-4189-9c65-a5f674a8c6f7" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'unknown business error has occurred',
+	httpStatus : '500'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	</mule>
+-----------------------------------------------------------------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="ErrorTypeJMS" doc:id="22753ef7-33b9-4673-a783-0cf9441e9404">
+		<choice doc:name="JMS Errors" doc:id="eb6117b8-bf4e-4fbf-abff-55b196ec372d" >
+			<when expression='#[error.errorType.identifier == "ACK"]'>
+					<ee:transform doc:name="Acknowledge Error" doc:id="6001b803-6a72-464b-a08b-031e2cc1b39a">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A JMS Acknowledge Error has occurred',
+	httpStatus: '500'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			
+</when>
+			<when expression='#[error.errorType.identifier == "CONNECTIVITY"]'>
+					<ee:transform doc:name="Connectivity Error" doc:id="f0609a21-0945-4eae-b5ca-0544c2298f02">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A JMS Connectivity Error has occurred',
+	httpStatus: '503'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>	
+			
+</when>
+			<when expression='#[error.errorType.identifier == "CONSUMING"]'>
+					<ee:transform doc:name="Comsumption Error" doc:id="addc4130-701e-40ef-8c53-0058a97025c2">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A JMS Consumption error has occurred',
+	httpStatus: '500'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			
+</when>
+			<when expression='#[error.errorType.identifier == "DESTINATION_NOT_FOUND"]'>
+					<ee:transform doc:name="Destination Error" doc:id="37c80aac-85d0-475b-9b0d-6d85754f4623">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Destination JMS was not found',
+	httpStatus: '404'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			
+</when>
+			<otherwise >
+					<ee:transform doc:name="Default JMS Error" doc:id="e89e4979-9e1f-44f9-9043-ae6bdf303f99">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Generic JMS Error',
+	httpStatus: '500'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			
+</otherwise>
+			</choice>
+	</flow>
+</mule>
+-------------------------------------------------------------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<flow name="messagevalidatorflow" doc:id="79ed9eb1-0f6a-4348-989d-e75fc283696a" >
+		<set-variable value="#[payload]" doc:name="Store Original Payload" doc:id="543ad80c-96c4-42ae-bdc4-cafe1399046f" variableName="originalPayload"/>
+		<foreach doc:name="For Each" doc:id="0bb0da6f-aa0e-4714-8de8-032fb8567d1e" collection="#[vars.validationExpressions]">
+			<choice doc:name="Choice" doc:id="e055b8fc-1846-4f23-b780-524a3aaba850">
+			<when expression="#[payload.expression == true]">
+				<set-variable value="SOAP validation returned Success" doc:name="SOAP Success Validation" doc:id="1901931f-d62f-42f6-88d6-e355245ea997" variableName="responseVar" />
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set Output Vars" doc:id="9a70ec61-997e-4200-887b-23f379fcb35b">
+						<ee:message>
+						</ee:message>
+						<ee:variables >
+							<ee:set-variable variableName="errorMessage" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.errorMessage]]></ee:set-variable>
+							<ee:set-variable variableName="responseVar" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.expression]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+					<set-variable value="406" doc:name="Set HTTP Status" doc:id="8c3101e4-b354-436a-beef-1c4e968fcdee" variableName="httpStatus" />
+					<ee:transform doc:name="Set Output Payload" doc:id="5a3a61d5-bc9a-49a1-82c1-46b0c465ac8a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+
+{  
+   "correlationId" : correlationId,
+   "validationExpression":  vars.responseVar,
+   "originalPayload": vars.originalPayload
+}
+ 
+ ]]></ee:set-payload>
+			</ee:message>
+						<ee:variables>
+						</ee:variables>
+		</ee:transform>
+					<raise-error doc:name="Raise Exception" doc:id="1884036a-97ae-451a-9eaf-cb2c5a2550d1" type="APP:CUSTOMER_API" description="#[vars.errorMessage]" />
+			</otherwise>
+		</choice>
+		</foreach>
+		
+	</flow>
+</mule>
+------------------------------------------------------------------------------------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+		<flow name="ErrorTypeTechnical" doc:id="6816c5a6-7497-4d89-9f25-5505b902d603" >
+		<choice doc:name="Choice" doc:id="fddc6fa9-4fdc-4d0e-980b-9216bbbc5790" >
+			<when expression='error.errorType.identifier == "INVALID_INPUT_DATA"'>
+				<ee:transform doc:name="Invalid Input" doc:id="3532038c-12a4-48b7-99ff-d9777c7e46e0">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Input data is invalid',
+	httpStatus : '400'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			
+</when>
+			<when expression='error.errorType.identifier == "SYSTEM_NOT_AVAILABLE"'>
+				<ee:transform doc:name="System not available" doc:id="87f532c8-dc19-4db9-a831-923cca61c64e">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'System Not available',
+	httpStatus: '503'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			
+</when>
+			<otherwise >
+				<ee:transform doc:name="Technical error" doc:id="373155e9-e74d-4a74-a474-bbc346974ebe">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Internal Server Error',
+	httpStatus: '500'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	</mule>
+--------------------------------------------------------------------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="ErrorTypeWSC" doc:id="eeaced4d-c51d-4f89-a3c5-9bfa2a897e17">
+		<choice doc:name="SOAP Faults" doc:id="21ec3429-40b2-44d2-b0bb-fb08f2d9befa" >
+					<when expression='#[error.errorType.identifier == "BAD_REQUEST"]' >
+						<ee:transform doc:name="Bad Request" doc:id="c28a7dc1-e06b-4ced-bc24-cc8dcae28379">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A Bad Request Error has occurred',
+	httpStatus: '400'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					
+</when>
+					<when expression='#[error.errorType.identifier == "SOAP_FAULT"]' >
+						<ee:transform doc:name="SOAP Fault" doc:id="a631e4b3-2e05-4b84-999f-45da210317a7">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A SOAP Fault has occurred',
+	httpStatus: '400'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					
+</when>
+					<otherwise>
+						<ee:transform doc:name="Default SOAP Error" doc:id="e90fb935-5e60-46d1-9c44-86377eaf5c25">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'Default SOAP Error',
+	httpStatus: '400'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					
+</otherwise>
+		</choice>
+	</flow>
+</mule>
+----------------------------------------------------------------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="ErrorTypeXRef" doc:id="010bae2a-fbb7-4b0f-b47e-0fb4f15336ba" >
+		<choice doc:name="XRef Faults" doc:id="df740447-ad8a-4b87-bbcc-853d870ac577" >
+			<when expression='#[error.errorType.identifier == "INVALID_INPUT"]' >
+				<ee:transform doc:name="Invalid Input" doc:id="c5ffbe42-c337-458d-bcdc-2408ea82ed7a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'A Bad Request Error has occurred',
+	httpStatus: '400'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[error.errorType.identifier == "NO_TRANSLATION_AVAILABLE"]' >
+				<ee:transform doc:name="No Translation Available" doc:id="5aa0de1c-1c8f-498f-8584-66fa893a87fb" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'No translation available.',
+	httpStatus: '400'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[error.errorType.identifier == "CONNECTIVITY"]' >
+				<ee:transform doc:name="Connectivity Error" doc:id="a6b441eb-0575-4231-80b8-817651bae8fb" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	errorMessage: 'An internal error occurred while connecting to the XRef Service',
+	httpStatus: '500'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+		</choice>
+	</flow>
+</mule>
 
 
 
@@ -10,53 +1001,6 @@
 
 
 
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://htng.org/PWS/2008B/SingleGuestItinerary/Reservation/Types" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:element name="ReservationLookupRequest">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element name="ReservationLookupData">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="ReservationLookup">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="DateRange">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element type="xs:dateTime" use="required" name="Start"/>
-                          <xs:element type="xs:dateTime" use="required" name="End"/>
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                    <xs:element type="xs:string" use="required" name="ResortId"/>
-                    <xs:element type="xs:string" use="required" name="RoomNumber"/>
-                  </xs:sequence>
-                  <xs:attribute type="xs:string" name="reservationStatus"/>
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
-</xs:schema>
 
 
 
-
-
-
-
-
-<?xml version="1.0" encoding="utf-8"?>
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://www.opentravel.org/OTA/2003/05" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:element name="FetchReservationRequest">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element name="ReservationID" type="xs:string" />
-        <xs:element name="ResortId" type="xs:string" />
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
-</xs:schema>
