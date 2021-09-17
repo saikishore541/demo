@@ -995,6 +995,248 @@ output application/java
 	</flow>
 </mule>
 
+------------------------------------------------------------------------------------------------
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:crypto="http://www.mulesoft.org/schema/mule/crypto" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/crypto http://www.mulesoft.org/schema/mule/crypto/current/mule-crypto.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b3f77680-10c5-4272-a3c8-843132395ab4" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="da77f732-ca02-41ba-a3b1-d954d0ccbc2a" >
+		<file:connection workingDir="${mule.home}/apps/${app.name}" />
+	</file:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="3b3e5e86-0043-4aea-9d5c-bcddbaf826c5" file="configuration.yaml" />
+	<flow name="mule-encryption-toolFlow" doc:id="2e128472-1ed9-4214-8fe7-2c2f226a29c6" initialState="started">
+		<http:listener doc:name="Listener" doc:id="df1c59af-5dc0-48ee-9eef-9b256609c646" config-ref="HTTP_Listener_config" path="encrypt" allowedMethods="POST"/>
+		<ee:transform doc:name="Transform Message" doc:id="98c425b5-0e3e-44f7-b588-fc04c76961aa">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="encrypt"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	fromAlgo: p('encryption.fromAlgo'),
+	toAlgo: p('encryption.toAlgo'),
+	key: p('encryption.key')
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="2ef27450-d6b1-4d98-848c-c1cce9fa5db3" >
+			<when expression="#[attributes.Headers.'content-type' == &quot;application/octet-stream&quot;]">
+				<logger level="INFO" doc:name="Logger" doc:id="3a84527c-a44c-43ab-b01c-494fd392446c" />
+				<set-variable value="#[p('app.home') ++ &quot;\secure-properties-tool.jar&quot;]" doc:name="Set Variable" doc:id="b8f74ad2-ac19-4240-9be6-a410ca5ab152" variableName="path"/>
+				<file:write doc:name="Writing Properties File " doc:id="4b7ec3ed-8b65-4aba-8eb9-ed112f5a3c62" config-ref="File_Config" path="${app.home}/new.properties"/>
+				<set-variable value="${app.home}/new.properties" doc:name="Set Variable" doc:id="c75bf6ca-d705-484f-8f00-4d785127a42b" variableName="filePath" />
+				<scripting:execute engine="Groovy" doc:name="Execute" doc:id="b142922c-23e3-4e5d-be9a-36586916d8e1">
+			<scripting:code><![CDATA[def command = "java -cp " + pathToJar + " com.mulesoft.tools.SecurePropertiesTool file encrypt " + fromAlgo + " " + toAlgo + " " + encryptionKey + " " + fileName + " " + encryptedName
+def output = command.execute()
+return output]]></scripting:code>
+			<scripting:parameters><![CDATA[#[{
+	pathToJar: vars.path,  
+	fromAlgo: vars.encrypt.fromAlgo,
+	toAlgo: vars.encrypt.toAlgo,
+	encryptionKey: vars.encrypt.key,
+	fileName: vars.filePath,
+	encryptedName: "D:/new.properties"
+}]]]></scripting:parameters>
+		</scripting:execute>
+				<ee:transform doc:name="Transform Message" doc:id="2b9c51d5-398e-4d2d-8857-cd0821ec0489">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "check D: Drive you will get encrypted file with named as new.properties"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression="#[attributes.Headers.'content-type' == &quot;text/yaml&quot;]">
+				<logger level="INFO" doc:name="Logger" doc:id="59e323f3-6882-4036-9b04-42e1c695e22f" message="#[vars.encrypt.fromAlgo]" />
+				<set-variable value="#[p('app.home') ++ &quot;\secure-properties-tool.jar&quot;]" doc:name="Set Variable" doc:id="581dee0c-c443-4cfe-8ed3-20ceeb8653cd" variableName="path"/>
+				<file:write doc:name="Writing YAML File " doc:id="b65350f3-9e5e-4ffc-96a3-6272e495f252" config-ref="File_Config" path="${app.home}/new.yaml" />
+				<set-variable value="${app.home}/new.yaml" doc:name="Set Variable" doc:id="18efabc4-e042-4bdd-ba33-b47dc3ce019d" variableName="filePath" />
+				<scripting:execute engine="Groovy" doc:name="Execute" doc:id="dd09a2b5-bd10-4840-b30b-194a9b8fdbe9">
+			<scripting:code><![CDATA[def command = "java -cp " + pathToJar + " com.mulesoft.tools.SecurePropertiesTool file encrypt " + fromAlgo + " " + toAlgo + " " + encryptionKey + " " + fileName + " " + encryptedName
+def output = command.execute()
+return output]]></scripting:code>
+			<scripting:parameters><![CDATA[#[{
+	pathToJar: vars.path,
+	fromAlgo: vars.encrypt.fromAlgo,
+	toAlgo: vars.encrypt.toAlgo,
+	encryptionKey: vars.encrypt.key,
+	fileName: vars.filePath,
+	encryptedName: "D:/new.yaml"
+}]]]></scripting:parameters>
+		</scripting:execute>
+				<ee:transform doc:name="Transform Message" doc:id="61fa13fd-f183-4973-932d-ee01b3f0d8b9">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "check D: Drive you will get encrypted file with named as new.yaml"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			
+</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="81c3aa5d-3868-47a6-96b7-4453026c613e" message="#[payload.string]"/>
+				<set-variable doc:name="Set Variable" doc:id="50272b6f-b176-497d-85b6-13e866158d5d" variableName="path" value="#[p('app.home') ++ &quot;/secure-properties-tool.jar&quot;]"/>
+				<set-variable value="#[payload.string]" doc:name="Set Variable" doc:id="05313813-9f31-41ec-ac1a-2c8b91e83f99" variableName="string" />
+				<logger level="INFO" doc:name="Logger" doc:id="5ce6fbd8-7807-45ac-b257-1c53a4bc058f" message="#[vars.path]" />
+				<scripting:execute doc:name="Execute" doc:id="aadba6c2-0c5a-41e1-82af-d38118a8db93" engine="Groovy">
+					<scripting:code ><![CDATA[def command = "java -cp " + pathToJar + " com.mulesoft.tools.SecurePropertiesTool string encrypt " + fromAlgo + " " + toAlgo + " " + encryptionKey + " " + encryptedString
+def output = command.execute()
+return output]]></scripting:code>
+					<scripting:parameters ><![CDATA[#[{
+	pathToJar: vars.path,
+	fromAlgo: vars.encrypt.fromAlgo,
+	toAlgo: vars.encrypt.toAlgo,
+	encryptionKey: vars.encrypt.key,
+	encryptedString: vars.string
+}]]]></scripting:parameters>
+				</scripting:execute>
+				<ee:transform doc:name="Transform Message" doc:id="b75f8459-ab1e-4474-a70a-5e6ae26b2a43">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	encryptedString: payload.inputStream replace ("\r\n") with("")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			
+</otherwise>
+		</choice>
+	</flow>
+	<flow name="decryption-flow" doc:id="d3f56d3a-e1b6-4b0e-b2f6-a6c9f0b2136b" >
+		<http:listener doc:name="Listener" doc:id="aeb244a0-7d9c-4474-88ac-0718f78dd4b4" config-ref="HTTP_Listener_config" path="/decrypt"/>
+		<ee:transform doc:name="Transform Message" doc:id="8bf859cb-377a-4ef3-9045-727912635a8d">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="encrypt"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	fromAlgo: p('encryption.fromAlgo'),
+	toAlgo: p('encryption.toAlgo'),
+	key: p('encryption.key')
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="a1c2a56e-aae2-4241-8271-d2af867ce3ed" >
+			<when expression="#[attributes.Headers.'content-type' == &quot;application/octet-stream&quot;]">
+				<logger level="INFO" doc:name="Logger" doc:id="3792d2e7-a9f1-4fcd-a047-88bef9e3ff17" />
+				<set-variable value="#[p('app.home') ++ &quot;\secure-properties-tool.jar&quot;]" doc:name="Set Variable" doc:id="c6d63aa9-469c-4f41-b5e5-953ca00bef1d" variableName="path"/>
+				<file:write doc:name="Writing Properties File " doc:id="7359fa85-16e3-49d3-adeb-5c9d1789f312" config-ref="File_Config" path="${app.home}/new-decrypt.properties" />
+				<set-variable value="${app.home}/new-decrypt.properties" doc:name="Set Variable" doc:id="a5e1ebfe-eb1f-4e77-900c-898455e2887b" variableName="filePath" />
+				<scripting:execute engine="Groovy" doc:name="Execute" doc:id="729fa761-5e38-48a7-9be7-abbb9907c87b">
+			<scripting:code><![CDATA[def command = "java -cp " + pathToJar + " com.mulesoft.tools.SecurePropertiesTool file decrypt " + fromAlgo + " " + toAlgo + " " + encryptionKey + " " + fileName + " " + encryptedName
+def output = command.execute()
+return output]]></scripting:code>
+			<scripting:parameters><![CDATA[#[{
+	pathToJar:  vars.path,
+	fromAlgo: vars.encrypt.fromAlgo,
+	toAlgo: vars.encrypt.toAlgo,
+	encryptionKey: vars.encrypt.key,
+	fileName: vars.filePath,
+	encryptedName: "D:/new-decrypt.properties"
+}]]]></scripting:parameters>
+		</scripting:execute>
+				<ee:transform doc:name="Transform Message" doc:id="75f30460-ea39-4d59-ab3e-1862ac9d082c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "check D: Drive you will get decrypted file with named as new.properties"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			
+</when>
+			<when expression="#[attributes.Headers.'content-type' == &quot;text/yaml&quot;]">
+				<logger level="INFO" doc:name="Logger" doc:id="d5d82b5f-12df-40a7-81da-8102b1f5eb83" message="#[vars.encrypt.fromAlgo]" />
+				<set-variable value="#[p('app.home') ++ &quot;\secure-properties-tool.jar&quot;]" doc:name="Set Variable" doc:id="445390d5-f9ce-4abe-b9ac-95b97240f8e4" variableName="path"/>
+				<file:write doc:name="Writing YAML File " doc:id="826c5dfc-fe40-4c8b-865c-ee9d1cf8b1a2" config-ref="File_Config" path="${app.home}/new-decrypt.yaml" />
+				<set-variable value="${app.home}/new-decrypt.yaml" doc:name="Set Variable" doc:id="8ea9d5df-0299-442e-b2e2-d300eb0596a7" variableName="filePath" />
+				<scripting:execute engine="Groovy" doc:name="Execute" doc:id="88ec4718-1f68-4773-b20a-82eee5a39c75">
+			<scripting:code><![CDATA[def command = "java -cp " + pathToJar + " com.mulesoft.tools.SecurePropertiesTool file decrypt " + fromAlgo + " " + toAlgo + " " + encryptionKey + " " + fileName + " " + encryptedName
+def output = command.execute()
+return output]]></scripting:code>
+			<scripting:parameters><![CDATA[#[{
+	pathToJar:  vars.path,
+	fromAlgo: vars.encrypt.fromAlgo,
+	toAlgo: vars.encrypt.toAlgo,
+	encryptionKey: vars.encrypt.key,
+	fileName: vars.filePath,
+	encryptedName: "D:/new-decrypt.yaml"
+}]]]></scripting:parameters>
+		</scripting:execute>
+				<ee:transform doc:name="Transform Message" doc:id="63ffd657-3032-4b1b-bdd7-d61328b4b0b0">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "check D: Drive you will get decrypted file with named as new.yaml"
+	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			
+
+</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="5db32bee-9355-4f92-b21d-611f235b6ec8" message="#[payload.string]"/>
+				<set-variable value="#[p('app.home') ++ &quot;/secure-properties-tool.jar&quot;]" doc:name="Set Variable" doc:id="3fb1332d-6269-4feb-8662-c53335abc6b3" variableName="path"/>
+				<set-variable value="#[payload.string]" doc:name="Set Variable" doc:id="e4ff8de2-e2d7-42a3-909f-b30968465706" variableName="string" />
+				<scripting:execute engine="Groovy" doc:name="Execute" doc:id="cfe4b957-9b11-4101-a09a-d32f85922baa">
+			<scripting:code><![CDATA[def command = "java -cp " + pathToJar + " com.mulesoft.tools.SecurePropertiesTool string decrypt " + fromAlgo + " " + toAlgo + " " + encryptionKey + " " + encryptedString
+def output = command.execute()
+return output]]></scripting:code>
+			<scripting:parameters><![CDATA[#[{
+	pathToJar: vars.path,
+	fromAlgo: vars.encrypt.fromAlgo,
+	toAlgo: vars.encrypt.toAlgo,
+	encryptionKey: vars.encrypt.key,
+	encryptedString: vars.string
+}]]]></scripting:parameters>
+		</scripting:execute>
+				<logger level="INFO" doc:name="Logger" doc:id="5af888d8-f675-4c57-a477-23914076ccaa" message="#[payload]"/>
+				<ee:transform doc:name="Transform Message" doc:id="bba15f72-2e80-4163-91bc-18b295dc593c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	DecryptedString: payload.inputStream replace ("\r\n") with("")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			
+
+</otherwise>
+		</choice>
+	
+	</flow>
+</mule>
 
 
 
