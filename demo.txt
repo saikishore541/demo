@@ -1238,7 +1238,341 @@ output application/json
 	</flow>
 </mule>
 
+=======================================------------======================================================
+log code
+$$$$$$$$$$%%%%%%%%%%%%%%%^^^^^^^^^^^^^^^^^^^^&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="6bae0d1d-47b4-42eb-915a-078dfc0520bf" file="audit-logging-properties.yaml" />
+	<sub-flow name="log-request-received" doc:id="f960d643-b96d-4096-8dfb-ef9a7eae5144" >
+		<set-variable value="#[if (attributes.headers.'x-correlation-start-time' != null) attributes.headers.'x-correlation-start-time' as DateTime else now()]" doc:name="Set Variable - transactionStartTime" doc:id="e13dfd8f-6fbe-4142-bfe4-b578d5800431" variableName="transactionStartTime" />
+		<async doc:name="Async" doc:id="9e57dc11-0ab6-43da-8d32-bb19fc39350d" >
+			<set-variable value='#["Request received"]' doc:name="Set requestState - Request Received" doc:id="5646d06b-3e54-4b5c-a3bf-05ff0c47b9c8" variableName="requestState" />
+			<flow-ref doc:name="Flow Reference -format and log" doc:id="0323ebe3-9f5f-460e-8ece-7140dbe6071a" name="format-and-log" />
+		</async>
+	</sub-flow>
+	<sub-flow name="log-response-returned" doc:id="85e4089b-4f8e-4244-b150-492d56b1663e" >
+		<async doc:name="Async" doc:id="3bd69db4-4c2a-4c23-8795-fb37126e01ff" >
+			<set-variable value="Response returned" doc:name="Set requestState - Response returned" doc:id="21d6930c-d873-4ca6-8309-c9575dc4f31d" variableName="requestState" />
+			<flow-ref doc:name="Flow Reference -format and log" doc:id="f6405268-1110-48d9-ad3b-83ead3e4bd23" name="format-and-log" />
+		</async>
+	</sub-flow>
+	<sub-flow name="log-resource-flow-entry" doc:id="7d0b0d50-fa55-4b44-9154-f0191a69c2ae" >
+		<async doc:name="Async" doc:id="38a6077f-c493-49a2-b150-86ffc91a0974" >
+			<set-variable value="Resource flow entry" doc:name="Set requestState - Resource flow entry" doc:id="b5d93d5e-62c1-46fb-8bd4-213b0c373734" variableName="requestState" />
+			<flow-ref doc:name="Flow Reference -format and log" doc:id="eba0254a-4d3c-48f3-adf9-58fddd307db2" name="format-and-log" />
+		</async>
+	</sub-flow>
+	<sub-flow name="log-resource-flow-complete" doc:id="d93a9a54-19fe-4353-b3e7-1e9d4f31dca5" >
+		<async doc:name="Async" doc:id="0787944b-e94a-43da-a923-5c28b595962b" >
+			<set-variable value="Resource flow complete" doc:name="Set requestState - Resource flow complete" doc:id="f11da9f8-37a2-4317-9755-7dee4b5a530b" variableName="requestState" />
+			<flow-ref doc:name="Flow Reference -format and log" doc:id="5a4317b0-7bf4-483e-9aa3-816022146df5" name="format-and-log" />
+		</async>
+	</sub-flow>
+	<sub-flow name="log-before-outbound-request" doc:id="5df12d84-3073-431b-92dd-96fa6e2ab07f" >
+		<async doc:name="Async" doc:id="e7d8a12f-85df-4aa8-a3c7-1a0a84bc0856" >
+			<set-variable value="Outbound request" doc:name="Set requestState - Performing outbound request" doc:id="82201ba2-3242-4c3d-a04d-00cceaf754d7" variableName="requestState" />
+			<flow-ref doc:name="Flow Reference -format and log" doc:id="cad645f2-00ba-453e-abf4-ac6673e2c415" name="format-and-log" />
+		</async>
+	</sub-flow>
+	<sub-flow name="log-after-outbound-request" doc:id="a8141272-9e20-4efc-9a91-493675a6b081" >
+		<async doc:name="Async" doc:id="8888c932-c933-4263-9121-7e5a9d5f5fa2" >
+			<set-variable value="Response received" doc:name="Set requestState - Outbound request complete" doc:id="6e3046e0-915f-4f83-bebe-a56d000982ed" variableName="requestState" />
+			<flow-ref doc:name="Flow Reference -format and log" doc:id="5b31c46c-8a83-48b3-a3a1-bd752ecc8e13" name="format-and-log" />
+		</async>
+	</sub-flow>
+	<sub-flow name="format-and-log" doc:id="78c038ab-3c2d-4371-a5f5-309d0812b3e7" >
+		<ee:transform doc:name="Format Log Message" doc:id="080aa193-6213-44ae-aab9-a26549881cf8" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="logMessage" ><![CDATA[%dw 2.0
+output application/json
+fun calcLatency () =
+	now() as Number {unit: "milliseconds"} - (vars.transactionStartTime as Number {unit: "milliseconds"})
+	
+
+fun requestStateFields () =
+	vars.requestState match {
+		case "Request received" -> 
+			{
+				correlationStartTime: vars.transactionStartTime,
+				(resourcePath: attributes.requestUri) if (attributes.requestUri != null),
+				(httpMethod: attributes.method) if(attributes.method != null)
+			}
+		case "Response returned" -> 
+			{
+				correlationStartTime: vars.transactionStartTime,
+				(httpStatus: attributes.statusCode) if(attributes.statusCode != null),
+				latency: calcLatency()
+			}
+		case "Resource flow complete" -> 
+			{
+				latency: calcLatency()
+			}
+		case "Response received" -> 
+			{
+				(responseStatusCode: attributes.statusCode) if(attributes.statusCode != null),
+				latency: calcLatency()
+			}
+		else -> {}
+	}
+---
+{
+	appName: app.name,
+	requestState: vars.requestState,
+	correlationId: correlationId,
+	(requestStateFields()),
+	(additionalInfo: vars.additionalLogInfo) if (vars.additionalLogInfo != null)
+}
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger doc:name="Write log message" doc:id="e70c969b-3691-4c30-8192-8b9aa09d6e1b" message="#[vars.logMessage]" level="INFO" />
+		<flow-ref doc:name="audit-and-remove-variables" doc:id="9eef1746-a294-4d27-84cb-7efec8c52857" name="audit-and-remove-variables"/>
+	</sub-flow>
+	<sub-flow name="log-error-message" doc:id="450286a4-772e-4bcf-b753-9569596ac429" >
+		<ee:transform doc:name="Format Error Log Message" doc:id="2c60b673-c750-43ee-be27-11f0ecebcdb6">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="logMessage"><![CDATA[%dw 2.0
+output application/json
+fun calcLatency () =
+	now() as Number {unit: "milliseconds"} - (vars.transactionStartTime as Number {unit: "milliseconds"})
+	
+---
+{
+	appName: app.name,
+	requestState: "Error",
+	correlationId: correlationId,
+	correlationStartTime: vars.transactionStartTime,
+	(resourcePath: attributes.requestUri) if (attributes.requestUri != null),
+	(httpMethod: attributes.method) if(attributes.method != null),
+	(additionalInfo: vars.additionalLogInfo) if (vars.additionalLogInfo != null),
+	exceptionPayload: payload
+}
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="ERROR" doc:name="Write Error Log Message" doc:id="6278a376-eeaa-4b0e-bf94-f5ef9a0c9a97" message="#[vars.logMessage]" />
+		<flow-ref doc:name="audit-and-remove-variables" doc:id="b3a67280-7342-4e22-99a5-1d7d4aafb471" name="audit-and-remove-variables"/>
+	</sub-flow>
+	<sub-flow name="audit-and-remove-variables" doc:id="0f3c863e-a977-4095-935f-b7db02a0c60e" >
+		<async doc:name="Async" doc:id="d17c0c14-fc13-444d-abab-aca69f58f4ce">
+			<flow-ref doc:name="persist-audit-logs" doc:id="377a6cb8-89e7-47d3-a7cb-0cc378778966" name="persist-audit-logs"/>
+		</async>
+		<remove-variable doc:name="Remove Variable - requestState" doc:id="152f1aa6-8908-4929-8ea8-ce8707b6a699" variableName="requestState" />
+		<remove-variable doc:name="Remove Variable - additionalLogInfo" doc:id="7e051baf-0799-46df-bb18-15b10972f4b9" variableName="additionalLogInfo" />
+		<remove-variable doc:name="Remove Variable - logMessage" doc:id="51811575-ff95-4858-8c4c-f979d8a50013" variableName="logMessage" />
+	</sub-flow>
+	<sub-flow name="persist-audit-logs" doc:id="5af38f99-bc70-4fbe-abf3-ad2c6d0dcfef" >
+		<choice doc:name="Is persistAuditLogs property set to TRUE" doc:id="4475eb66-979e-418a-a1f9-5c759e2ee78d" >
+			<when expression="#[p('persistAuditLogs') != null and p('persistAuditLogs') as Boolean == true]">
+				<logger level="INFO" doc:name="PLACEHOLDER" doc:id="5c21260e-8e85-4a2c-8e74-d6d8140c8c35" message='#["-------------PLACEHOLDER Persisting Audit logs--------------" ++ vars.logMessage.requestState as String]' />
+				<logger level="INFO" doc:name="PLACEHOLDER" doc:id="c5d22875-dedd-4cfc-aa5b-53a005f4ac71" message="#[&quot;Audit table is ----&quot; ++ p('auditDatabase.table') as String]"/>
+			</when>
+		</choice>
+	</sub-flow>	
+</mule>
+
+-==============================================================================================================================
+xml sdk-log
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+
+    <!--These are some of the loggers you can enable. 
+        There are several more you can find in the documentation. 
+        Besides this log4j configuration, you can also use Java VM environment variables
+        to enable other logs like network (-Djavax.net.debug=ssl or all) and 
+        Garbage Collector (-XX:+PrintGC). These will be append to the console, so you will 
+        see them in the mule_ee.log file. -->
+
+    <Appenders>
+        <RollingFile name="file" fileName="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}common-logging-framework.log" 
+                 filePattern="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}common-logging-framework-%i.log">
+            <PatternLayout pattern="%-5p %d [%t] [event: %X{correlationId}] %c: %m%n" />
+            <SizeBasedTriggeringPolicy size="10 MB" />
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        
+        <!-- Http Logger shows wire traffic on DEBUG. -->
+        <!--AsyncLogger name="org.mule.service.http.impl.service.HttpMessageLogger" level="DEBUG" /-->
+        <AsyncLogger name="org.mule.service.http" level="WARN"/>
+        <AsyncLogger name="org.mule.extension.http" level="WARN"/>
+    
+		<!-- Mule logger -->        
+        <AsyncLogger name="org.mule.runtime.core.internal.processor.LoggerMessageProcessor" level="INFO"/>
+ 
+        <AsyncRoot level="INFO">
+            <AppenderRef ref="file" />
+        </AsyncRoot>
+    </Loggers>
+</Configuration>
+
+
+----------------------------------------------------------------------------------
+
+POM.xml
+
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.shell</groupId>
+	<artifactId>common-logging-framework</artifactId>
+	<version>0.0.9</version>
+	<packaging>jar</packaging>
+
+	<name>common-logging-framework</name>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8
+		</project.reporting.outputEncoding>
+
+		<app.runtime>4.2.2</app.runtime>
+		<mule.maven.plugin.version>3.3.5</mule.maven.plugin.version>
+	</properties>
+	<scm>
+		<developerConnection>scm:git:https://sede-gf-eis.visualstudio.com/ETSOM-IPAAS/_git/mule-projects</developerConnection>
+		<tag>common-logging-framework-0.0.9</tag>
+	</scm>
+
+
+	<dependencies>
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-http-connector</artifactId>
+			<version>1.5.4</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-sockets-connector</artifactId>
+			<version>1.1.5</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>anypoint-exchange</id>
+			<name>Anypoint Exchange</name>
+			<url>https://maven.anypoint.mulesoft.com/api/v1/maven</url>
+			<layout>default</layout>
+		</repository>
+		<repository>
+			<id>mulesoft-releases</id>
+			<name>MuleSoft Releases Repository</name>
+			<url>https://repository.mulesoft.org/releases/</url>
+			<layout>default</layout>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>mulesoft-releases</id>
+			<name>mulesoft release repository</name>
+			<layout>default</layout>
+			<url>https://repository.mulesoft.org/releases/</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+	<profiles>
+		<profile>
+			<id>build</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-release-plugin</artifactId>
+						<version>3.0.0-M1</version>
+					</plugin>
+				</plugins>
+				<resources>
+					<resource>
+						<directory>src/main/mule</directory>
+					</resource>
+					<resource>
+						<directory>src/main/resources</directory>
+					</resource>
+				</resources>
+			</build>
+			<distributionManagement>
+				<repository>
+					<id>mule-artifacts</id>
+					<url>https://sede-gf-eis.pkgs.visualstudio.com/ETSOM-IPAAS/_packaging/mule-artifacts/maven/v1</url>
+					<releases>
+						<enabled>true</enabled>
+					</releases>
+					<snapshots>
+						<enabled>true</enabled>
+					</snapshots>
+				</repository>
+				<snapshotRepository>
+					<id>mule-artifacts-SNAPSHOT</id>
+					<url>https://sede-gf-eis.pkgs.visualstudio.com/ETSOM-IPAAS/_packaging/mule-artifacts-SNAPSHOT/maven/v1</url>
+					<releases>
+						<enabled>false</enabled>
+					</releases>
+					<snapshots>
+						<enabled>true</enabled>
+					</snapshots>
+				</snapshotRepository>
+			</distributionManagement>
+		</profile>
+	</profiles>
+</project>
+
+
+===================================================================================================
+
+src/main/resorces-> log4j
+
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+
+    <!--These are some of the loggers you can enable. 
+        There are several more you can find in the documentation. 
+        Besides this log4j configuration, you can also use Java VM environment variables
+        to enable other logs like network (-Djavax.net.debug=ssl or all) and 
+        Garbage Collector (-XX:+PrintGC). These will be append to the console, so you will 
+        see them in the mule_ee.log file. -->
+
+    <Appenders>
+        <RollingFile name="file" fileName="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}sys-gcc-workjam-events-api.log"
+                 filePattern="${sys:mule.home}${sys:file.separator}logs${sys:file.separator}sys-gcc-workjam-events-api-%i.log">
+            <PatternLayout pattern="%-5p %d [%t] [processor: %X{processorPath}; event: %X{correlationId}] %c: %m%n"/>
+            <SizeBasedTriggeringPolicy size="10 MB"/>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- Http Logger shows wire traffic on DEBUG -->
+        <!--AsyncLogger name="org.mule.service.http.impl.service.HttpMessageLogger" level="DEBUG"/-->
+        <AsyncLogger name="org.mule.service.http" level="WARN"/>
+        <AsyncLogger name="org.mule.extension.http" level="WARN"/>
+
+        <!-- Mule logger -->
+        <AsyncLogger name="org.mule.runtime.core.internal.processor.LoggerMessageProcessor" level="INFO"/>
+
+        <AsyncRoot level="INFO">
+            <AppenderRef ref="file"/>
+        </AsyncRoot>
+    </Loggers>
+
+</Configuration>
 
 
 
